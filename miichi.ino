@@ -1,7 +1,7 @@
 /* Mi-ichi
  by Asterki (https://www.asterki.com)
  
- modified 11 Oct 2023
+ modified 13 Oct 2023
  by Fernando Rivera
  
  board used
@@ -28,7 +28,7 @@ const int echoPin = 22;
 long duration, cm;
 
 
-int walking = 1;
+int walking = 0;
  
 // Legs, read documentation to know about each pin
 Pwm pwm = Pwm();
@@ -44,7 +44,7 @@ const byte servoPosSitDown[12] = {90, 130, 90,   90, 40, 260,    90, 140, 220,  
 const byte servoPins[12] =       {16, 15, 17,   18, 19, 14,   27, 32, 33,   23, 25, 26};
 
 
-BT Event Listener
+// BT Event Listener
 void BT_EventHandler(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
   if (event == ESP_SPP_DATA_IND_EVT ) {
     while (SerialBT.available()) {
@@ -80,14 +80,16 @@ void BT_EventHandler(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
  
       if (incoming == 53) {
         walking = 1;
-      }      
+      }
       if (incoming == 54) {
+        walking = 2;
+      }      
+      if (incoming == 55) {
         walking = 0;
       } 
     }
   } 
 }
-
 
  
 void setup() {
@@ -105,39 +107,33 @@ void setup() {
   Serial.println("[INFO] - Bluetooth device started");
 }
 
-int walkingMotion[2][12] = {
-      {90, 160, 170, 90, 130, 90, 90, 20, 10, 90, 50, 90},
-      {90, 50, 90, 90, 20, 10, 90, 130, 90, 90, 20, 10}
-};
-
-int counter = 10;
 
 void loop() {
   if (walking == 1) {
     // Arms
-    pwm.writeServo(15, 80); // Front right 
-    pwm.writeServo(19, 130); // Back right 
-    pwm.writeServo(25, 130); // Front left 
-    pwm.writeServo(32, 160); // Back left 
+    pwm.writeServo(15, 140); // Front right (goes front)
+    pwm.writeServo(19, 90); // Back right (goes back)
+    pwm.writeServo(25, 90); // Front left (goes back)
+    pwm.writeServo(32, 140); // Back left (goes front)
 
     // Paw
-    pwm.writeServo(17, 10); // Front right 
-    pwm.writeServo(14, 90); // Back right 
-    pwm.writeServo(26, 90); // Front left 
-    pwm.writeServo(33, 170); // Back left 
+    pwm.writeServo(17, 130); // Front right (goes front)
+    pwm.writeServo(14, 90); // Back right (goes back)
+    pwm.writeServo(26, 90); // Front left (goes back)
+    pwm.writeServo(33, 130); // Back left (goes front)
     
     delay(350);
   
-    pwm.writeServo(15, 120); // Front right 
-    pwm.writeServo(19, 160); // Back right 
-    pwm.writeServo(25, 160); // Front left 
-    pwm.writeServo(32, 50); // Back left 
+    pwm.writeServo(15, 90); // Front right (goes back)
+    pwm.writeServo(19, 60); // Back right (goes front)
+    pwm.writeServo(25, 60); // Front left (goes front)
+    pwm.writeServo(32, 90); // Back left (goes back)
 
     // Paw
-    pwm.writeServo(17, 90); // Front right 
-    pwm.writeServo(14, 170); // Back right 
-    pwm.writeServo(26, 170); // Front left 
-    pwm.writeServo(33, 90); // Back left 
+    pwm.writeServo(17, 90); // Front right (goes front)
+    pwm.writeServo(14, 60); // Back right (goes back)
+    pwm.writeServo(26, 60); // Front left (goes back)
+    pwm.writeServo(33, 90); // Back left (goes front)
     delay(350);
   } else if (walking == 2) { // Walk backwards
     // Arms
