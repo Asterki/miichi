@@ -1,7 +1,7 @@
 /* Mi-ichi
  by Asterki (https://www.asterki.com)
  
- modified 13 Oct 2023
+ modified 14 Oct 2023
  by Fernando Rivera
  
  board used
@@ -13,13 +13,13 @@
 */
  
 // Libs
-#include "BluetoothSerial.h"
+//#include "BluetoothSerial.h"
 #include <pwmWrite.h>
- 
+#include <iterator> 
  
 // BT Config
-String device_name = "Mi-ichi";
-BluetoothSerial SerialBT;
+// String device_name = "Mi-ichi";
+// BluetoothSerial SerialBT;
  
 
 // Proximity Sensor Config
@@ -28,7 +28,7 @@ const int echoPin = 22;
 long duration, cm;
 
 
-int walking = 0;
+int currentMotion = 1;
  
 // Legs, read documentation to know about each pin
 Pwm pwm = Pwm();
@@ -36,16 +36,27 @@ Pwm pwm = Pwm();
 
 // Preset Positions                   fr            br            bl            fl
 // Legend:                        s   a   p     s   a   p     s   a   p     s   a   p
-const byte servoPosStandUp[12] = {90, 110, 110,   90, 110, 110,  90, 70, 70,  90, 70, 70};
-const byte servoPosLayDown[12] = {90, 180, 90,  90, 30, 0,  90, 150, 210, 90, 0, 90};
+const byte servoPosStandUp[12] = {90, 110, 110, 90, 110, 110, 90, 70, 70,   90, 70, 70};
+const byte servoPosLayDown[12] = {90, 180, 90,  90, 30, 0,    90, 150, 210, 90, 0, 90};
 const byte servoPosStretch[12] = {90, 180, 90,  90, 60, 60,   90, 120, 120, 90, 0, 90};
-const byte servoPosSitDown[12] = {90, 130, 90,   90, 40, 260,    90, 140, 220,  90, 50, 90};
+const byte servoPosSitDown[12] = {90, 130, 90,  90, 40, 260,  90, 140, 220, 90, 50, 90};
+
+// Preset motions
+int motionSpeed = 350;
+const byte motionWalk[2][12] = {
+  {90, 140, 130,  90, 90, 90,  90, 140, 130,  90, 90, 90},
+  {90, 90,  90,   90, 60, 60,  90, 90,  90,   90, 60, 60}
+};
+const byte motionBackwardsWalk[2][12] = {
+  {90, 160, 170,  90, 50, 90,   90, 20, 10,    90, 50, 90},
+  {90, 130,  90,  90, 160, 170, 90, 130, 90,   90, 20, 10}
+};
  
 const byte servoPins[12] =       {16, 15, 17,   18, 19, 14,   27, 32, 33,   23, 25, 26};
 
 
 // BT Event Listener
-void BT_EventHandler(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
+/*void BT_EventHandler(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
   if (event == ESP_SPP_DATA_IND_EVT ) {
     while (SerialBT.available()) {
       int incoming = SerialBT.read();
@@ -53,43 +64,43 @@ void BT_EventHandler(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
       if (incoming == 49) {
         for (int i = 0; i <= 12; i++) {
           pwm.writeServo(servoPins[i], servoPosStandUp[i]);
-            walking = 0;
+            currentMotion = 0;
         }
       }
       
       if (incoming == 50) {
         for (int i = 0; i <= 12; i++) {
           pwm.writeServo(servoPins[i], servoPosSitDown[i]);
-            walking = 0;
+            currentMotion = 0;
         }
       }
       
       if (incoming == 51) {
         for (int i = 0; i <= 12; i++) {
           pwm.writeServo(servoPins[i], servoPosLayDown[i]);
-            walking = 0;
+            currentMotion = 0;
         }
       }
       
       if (incoming == 52) {
         for (int i = 0; i <= 12; i++) {
           pwm.writeServo(servoPins[i], servoPosStretch[i]);
-            walking = 0;
+            currentMotion = 0;
         }
       }
  
       if (incoming == 53) {
-        walking = 1;
+        currentMotion = 1;
       }
       if (incoming == 54) {
-        walking = 2;
+        currentMotion = 2;
       }      
       if (incoming == 55) {
-        walking = 0;
+        currentMotion = 0;
       } 
     }
   } 
-}
+}*/
 
  
 void setup() {
@@ -97,70 +108,32 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
  
   // Set all servos to initial position
-  for (int i = 0; i <= 12; i++) {
+  for (int i = 0; i < 12; i++) {
     pwm.writeServo(servoPins[i], servoPosStandUp[i]);
   }
  
   // Start BT
-  SerialBT.begin(device_name);
-  SerialBT.register_callback(BT_EventHandler);
+  // SerialBT.begin(device_name);
+  // SerialBT.register_callback(BT_EventHandler);
   Serial.println("[INFO] - Bluetooth device started");
 }
 
 
 void loop() {
-  if (walking == 1) {
-    // Arms
-    pwm.writeServo(15, 140); // Front right (goes front)
-    pwm.writeServo(19, 90); // Back right (goes back)
-    pwm.writeServo(25, 90); // Front left (goes back)
-    pwm.writeServo(32, 140); // Back left (goes front)
-
-    // Paw
-    pwm.writeServo(17, 130); // Front right (goes front)
-    pwm.writeServo(14, 90); // Back right (goes back)
-    pwm.writeServo(26, 90); // Front left (goes back)
-    pwm.writeServo(33, 130); // Back left (goes front)
-    
-    delay(350);
-  
-    pwm.writeServo(15, 90); // Front right (goes back)
-    pwm.writeServo(19, 60); // Back right (goes front)
-    pwm.writeServo(25, 60); // Front left (goes front)
-    pwm.writeServo(32, 90); // Back left (goes back)
-
-    // Paw
-    pwm.writeServo(17, 90); // Front right (goes front)
-    pwm.writeServo(14, 60); // Back right (goes back)
-    pwm.writeServo(26, 60); // Front left (goes back)
-    pwm.writeServo(33, 90); // Back left (goes front)
-    delay(350);
-  } else if (walking == 2) { // Walk backwards
-    // Arms
-    pwm.writeServo(15, 160); // Front right 
-    pwm.writeServo(19, 50); // Back right 
-    pwm.writeServo(25, 50); // Front left 
-    pwm.writeServo(32, 20); // Back left 
-
-    // Paw
-    pwm.writeServo(17, 170); // Front right 
-    pwm.writeServo(14, 90); // Back right 
-    pwm.writeServo(26, 90); // Front left 
-    pwm.writeServo(33, 10); // Back left 
-    
-    delay(350);
-  
-    pwm.writeServo(15, 130); // Front right 
-    pwm.writeServo(19, 20); // Back right 
-    pwm.writeServo(25, 20); // Front left 
-    pwm.writeServo(32, 130); // Back left 
-
-    // Paw
-    pwm.writeServo(17, 90); // Front right 
-    pwm.writeServo(14, 10); // Back right 
-    pwm.writeServo(26, 10); // Front left 
-    pwm.writeServo(33, 90); // Back left 
-    delay(350);
+  if (currentMotion == 1) {
+    for (int j = 0; j < 2; j++) {
+      for (int i = 0; i < 12; i++) {
+        pwm.writeServo(servoPins[i], motionWalk[j][i]);
+      }
+      delay(motionSpeed);
+    }
+  } else if (currentMotion == 2) { // Walk backwards
+    for (int j = 0; j < 2; j++) {
+      for (int i = 0; i < 12; i++) {
+        pwm.writeServo(servoPins[i], motionBackwardsWalk[j][i]);
+      }
+      delay(motionSpeed);
+    }
   }
   
   /*
