@@ -3,7 +3,7 @@ Mi-ichi is a robot, made in C++ and the WEMOS LOLIN32 Lite board
 
 ## Features
 - Forwards and backwards walking
-- 5 Different positions
+- 5 Different positions and 6 motions
 - Connection through Bluetooth 
 
 ## Planned Features
@@ -13,7 +13,7 @@ Mi-ichi is a robot, made in C++ and the WEMOS LOLIN32 Lite board
 - More positions and movements
 
 ## Requirements 
-The hardware requirements can all be satisfied by getting [the robot](https://en.aliexpress.com/item/1005002261067786.html), also a USB Micro b and 3.7v batteries.
+The hardware requirements can all be satisfied by getting [the robot](https://de.aliexpress.com/item/1005004928193846.html?gatewayAdapt=glo2esp#nav-specification), also a USB Micro b and 3.7v batteries.
 
 Software requirements:
 - A device capable of Bluetooth v4.4
@@ -35,11 +35,16 @@ $ arduino-ide miichi.ino
 Then just upload the code, turn on the device, and you're ready to pair and control
 
 ## Positions
-- 1: Stand up
-- 2: Sit down
-- 3: Lay down
-- 4: Stretch
-- 5: Walk
-- 6: Walk backwards
-- 7: Stop walking
+- A: Stand up
+- B: Lay down
+- C: Stretch
+- D: Poop
+- E: Sit down
+- F: Salute
+- G: Walk
+- H: Walk backwards
+- I: Walk left
+- J: Walk right
+- K: Dance
+- L: Stop all motions
 Send the corresponding number through a paired and connected bluetooth serial, and the robot will move to that position/do that movement.
